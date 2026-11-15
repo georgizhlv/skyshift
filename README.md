@@ -2,7 +2,7 @@
 
 **NASA Space Apps Challenge 2026 · “Planet X and SPHEREx”**
 
-**Live demo:** https://YOUR-GITHUB-NAME.github.io/skyshift/ · **Development diary:** [DEVLOG.md](DEVLOG.md)
+ **Development diary:** [DEVLOG.md](DEVLOG.md)
 
 SkyShift is a public web tool that turns NASA SPHEREx images into a time-lapse of any patch of sky.
 Type a name or coordinates, and within seconds you see the sky blink between epochs six months apart.
