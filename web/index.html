@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyShift — watch the infrared sky move with NASA SPHEREx</title>
+<meta name="description" content="Enter any sky position and watch NASA SPHEREx images change over time. Blink, difference, colour-by-time, on-the-fly 0.75–5 µm spectra, light curves and automatic proper-motion measurement.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script>window.SKYSHIFT_CONFIG = { proxy: '' /* set to your Cloudflare Worker URL, see README */ };</script>
+<script src="config.js" onerror="0"></script>
+</head>
+<body>
+<!--SKYSHIFT-BODY-START-->
+<div id="app">
+  <header class="top">
+    <a class="brand" href="?" title="SkyShift home">
+      <svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#4fa3ff"/><stop offset=".55" stop-color="#9be15d"/><stop offset="1" stop-color="#ff5e5b"/></linearGradient></defs><circle cx="20" cy="20" r="18" fill="none" stroke="url(#lg)" stroke-width="2.5"/><circle cx="12" cy="24" r="2.6" fill="#4fa3ff" opacity=".55"/><circle cx="19" cy="20" r="2.9" fill="#9be15d" opacity=".75"/><circle cx="27" cy="15.5" r="3.3" fill="#ff5e5b"/></svg>
+      <span><b>SkyShift</b><small>SPHEREx time-lapse explorer</small></span>
+    </a>
+    <form id="search" class="search" autocomplete="off">
+      <input id="q" type="text" spellcheck="false" placeholder="Object name or RA Dec — e.g. WISE 0855, 08 55 10.8 −07 14 42">
+      <button class="btn primary" type="submit">Go</button>
+    </form>
+    <div class="top-actions">
+      <button class="btn ghost" id="btnShare" title="Copy a link to this view">Share</button>
+      <button class="btn ghost" id="btnEmbed" title="Embed this view in another website">Embed</button>
+      <button class="btn ghost icon" id="btnOptions" title="Options" aria-expanded="false">⚙</button>
+    </div>
+  </header>
+
+  <section id="options" class="options" hidden>
+    <label>Field of view
+      <select id="fov"><option>2</option><option>3</option><option selected>4</option><option>6</option><option>10</option><option>15</option><option>30</option></select> arcmin</label>
+    <label>Max exposures <select id="maxf"><option>60</option><option selected>160</option><option>320</option><option>640</option><option value="0">all</option></select></label>
+    <label>Data release <select id="rel"><option value="all" selected>newest (DR1 + QR3)</option><option value="dr1">DR1 only</option><option value="qr3">QR3 only</option></select></label>
+    <label class="chk"><input type="checkbox" id="useCache" checked> cache downloads in this browser</label>
+    <button class="btn ghost small" id="btnClear">Clear cache</button>
+    <span class="est" id="estimate"></span>
+  </section>
+
+  <section id="landing" class="landing">
+    <div class="hero">
+      <h1>Watch the infrared sky <em>move</em>.</h1>
+      <p>Since 2025, NASA's <b>SPHEREx</b> telescope has mapped the whole sky every six months in 102 colours of infrared light. SkyShift turns those images into a time-lapse of any spot you choose. Stars that sit still stay white; anything that moves, flickers, or glows strangely in the infrared stands out — just like Pluto did in 1930.</p>
+      <ol class="steps"><li><b>Pick a spot</b> — type a name or coordinates.</li><li><b>Watch it blink</b> — epochs six months apart play as a movie.</li><li><b>Let SkyShift measure</b> — motion, brightness changes and a full 0.75–5&nbsp;µm spectrum, computed live in your browser.</li></ol>
+    </div>
+    <div class="presets" id="presets"></div>
+    <p class="fineprint">Pixels stream straight from NASA's public SPHEREx archive on AWS — no account, no install. Works with every new data release automatically.</p>
+  </section>
+
+  <main id="work" class="work" hidden>
+    <section class="viewer card">
+      <div class="target-line">
+        <div><h2 id="tName">—</h2><div class="sub" id="tCoords"></div></div>
+        <div class="pills" id="tPills"></div>
+      </div>
+      <div class="modes" role="tablist" id="modes">
+        <button data-mode="blink" class="on" title="Six-month epochs stacked and played as a movie">Blink</button>
+        <button data-mode="diff" title="Each epoch minus all the others: movers become blue/red pairs">Difference</button>
+        <button data-mode="time" title="One picture: colour = time. Still stars are white; movers leave a rainbow">Colour&nbsp;=&nbsp;time</button>
+        <button data-mode="ir" title="Colour = infrared wavelength: blue 0.75–1.6 µm, green 1.6–3.8 µm, red 3.8–5 µm">Infrared&nbsp;colour</button>
+        <button data-mode="frames" title="Every single exposure in time order (best for fast asteroids)">Exposures</button>
+      </div>
+      <div class="dets" id="dets" title="Which SPHEREx detector arrays (wavelength ranges) to include"></div>
+      <div class="stage" id="stage">
+        <canvas id="img"></canvas><canvas id="ovl"></canvas>
+        <div class="stage-label" id="frameLabel"></div>
+        <div class="readout" id="readout"></div>
+        <div class="progress" id="progress"><i></i></div>
+        <div class="stage-msg" id="stageMsg"></div>
+      </div>
+      <div class="player">
+        <button class="btn icon" id="prev" title="Previous (←)">⏮</button>
+        <button class="btn icon primary" id="play" title="Play / pause (space)">▶</button>
+        <button class="btn icon" id="next" title="Next (→)">⏭</button>
+        <input type="range" id="scrub" min="0" max="0" value="0">
+        <label class="speed">speed <input type="range" id="speed" min="1" max="12" value="4"></label>
+      </div>
+      <div class="display">
+        <label>Stretch <select id="stretch"><option value="asinh" selected>asinh</option><option value="sqrt">sqrt</option><option value="log">log</option><option value="linear">linear</option></select></label>
+        <label>Colours <select id="cmap"><option value="gray">grey</option><option value="inferno">inferno</option><option value="ice">ice</option></select></label>
+        <label>Contrast <input type="range" id="contrast" min="0" max="100" value="55"></label>
+        <label class="chk"><input type="checkbox" id="invert"> invert</label>
+        <label class="chk"><input type="checkbox" id="smooth" checked> smooth</label>
+        <span class="sep"></span>
+        <label class="chk"><input type="checkbox" id="oTarget" checked> target</label>
+        <label class="chk"><input type="checkbox" id="oGaia"> Gaia</label>
+        <label class="chk"><input type="checkbox" id="oMovers" checked> movers</label>
+        <label class="chk"><input type="checkbox" id="oFlags"> flags</label>
+      </div>
+      <p class="hint">Tip: click any star to get its spectrum, brightness history and motion. Arrow keys step, space plays.</p>
+    </section>
+
+    <section class="side card">
+      <nav class="tabs" id="tabs">
+        <button data-tab="spec" class="on">Spectrum</button>
+        <button data-tab="lc">Brightness</button>
+        <button data-tab="motion">Motion</button>
+        <button data-tab="movers">Movers</button>
+        <button data-tab="data">Data</button>
+        <button data-tab="sky">Sky map</button>
+      </nav>
+      <div class="probe-line" id="probeLine"></div>
+      <div class="tab" id="tab-spec">
+        <canvas class="chart" id="cSpec"></canvas>
+        <div class="row"><label class="chk"><input type="checkbox" id="specLog" checked> log flux</label><label class="chk"><input type="checkbox" id="specPts" checked> single exposures</label><label class="chk"><input type="checkbox" id="specMol" checked> molecules</label><button class="btn ghost small" id="copySpec">Copy CSV</button></div>
+        <div class="explain" id="specText"></div>
+      </div>
+      <div class="tab" id="tab-lc" hidden>
+        <canvas class="chart" id="cLC"></canvas>
+        <div class="explain" id="lcText"></div>
+      </div>
+      <div class="tab" id="tab-motion" hidden>
+        <canvas class="chart sq" id="cMotion"></canvas>
+        <div class="explain" id="motionText"></div>
+      </div>
+      <div class="tab" id="tab-movers" hidden>
+        <div class="explain" id="moversText"></div>
+        <div class="list" id="moversList"></div>
+      </div>
+      <div class="tab" id="tab-data" hidden>
+        <div class="explain" id="dataText"></div>
+        <div class="list mono" id="frameList"></div>
+      </div>
+      <div class="tab" id="tab-sky" hidden>
+        <div class="row"><select id="survey"><option value="CDS/P/allWISE/color">AllWISE colour</option><option value="CDS/P/2MASS/color">2MASS colour</option><option value="CDS/P/DSS2/color">DSS optical</option><option value="CDS/P/PanSTARRS/DR1/color-z-zg-g">Pan-STARRS</option></select><label class="chk"><input type="checkbox" id="skyGaia" checked> Gaia DR3</label></div>
+        <div id="aladin"></div>
+        <div class="explain">Context view from Aladin Lite (CDS). The yellow box is the SkyShift field.</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="modal" hidden><div class="modal-card"><h3 id="mTitle"></h3><div id="mBody"></div><div class="row end"><button class="btn primary" id="mClose">Close</button></div></div></div>
+  <div class="toast" id="toast"></div>
+
+  <footer class="foot">
+    SkyShift · Data: NASA SPHEREx via NASA/IPAC Infrared Science Archive (IRSA) &amp; AWS Open Data · Gaia DR3 (ESA) · name resolver &amp; Aladin Lite (CDS, Strasbourg).
+    This research made use of data from the SPHEREx mission, funded by NASA and managed by JPL/Caltech.
+    <br>Code and documentation developed with the assistance of an AI tool (Claude, Anthropic); design, testing and scientific validation by the SkyShift team.
+  </footer>
+</div>
+<!--SKYSHIFT-BODY-END-->
+<script src="js/core.js"></script>
+<script src="js/fits.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/process.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/render.js"></script>
+<script src="js/plot.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
