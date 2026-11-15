@@ -1,0 +1,37 @@
+[
+ {
+  "id": "wise0855",
+  "ra": 133.76,
+  "dec": -7.242,
+  "radius": 0.05,
+  "file": "wise0855.json"
+ },
+ {
+  "id": "barnard",
+  "ra": 269.446,
+  "dec": 4.768,
+  "radius": 0.05,
+  "file": "barnard.json"
+ },
+ {
+  "id": "epsindib",
+  "ra": 331.096,
+  "dec": -56.801,
+  "radius": 0.05,
+  "file": "epsindib.json"
+ },
+ {
+  "id": "rwaur",
+  "ra": 76.956,
+  "dec": 30.401,
+  "radius": 0.05,
+  "file": "rwaur.json"
+ },
+ {
+  "id": "rdra",
+  "ra": 248.167,
+  "dec": 66.755,
+  "radius": 0.05,
+  "file": "rdra.json"
+ }
+]

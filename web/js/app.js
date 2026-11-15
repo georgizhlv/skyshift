@@ -1,4 +1,4 @@
-/* SkyShift — UI controller */
+/* SkyShift — UI controller  */
 (function (SS) {
   'use strict';
   const $ = (s) => document.querySelector(s); const $$ = (s) => [...document.querySelectorAll(s)];
@@ -422,7 +422,7 @@
   async function updateAladin(force) {
     if (!S.sess) return; const g = S.sess.grid;
     try {
-      if (!window.A) await loadScript('https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js');
+      if (!window.A) window.A = (await import('https://cdn.jsdelivr.net/npm/aladin-lite@3/dist/aladin.js')).default;
       await A.init;
       if (!S.aladin) S.aladin = A.aladin('#aladin', { survey: $('#survey').value, fov: g.fov / 60 * 3, target: `${g.ra} ${g.dec}`, cooFrame: 'ICRS', showReticle: true, showCooGrid: false });
       else S.aladin.gotoRaDec(g.ra, g.dec);
@@ -430,9 +430,9 @@
         S._alKey = g.ra + ':' + g.fov; S.aladin.removeLayers && S.aladin.removeLayers();
         const ov = A.graphicOverlay({ color: '#ffcf5c', lineWidth: 2 }); S.aladin.addOverlay(ov);
         const h = g.fov / 120; const corners = [[-h, -h], [h, -h], [h, h], [-h, h]].map(([x, y]) => g.tan.toSky(x, y)); ov.add(A.polygon(corners));
-        if ($('#skyGaia').checked) S.aladin.addCatalog(A.catalogFromVizieR('I/355/gaiadr3', `${g.ra} ${g.dec}`, g.fov / 60, { onClick: 'showTable', color: '#6cb6ff' }));
+        if ($('#skyGaia').checked) try { S.aladin.addCatalog(A.catalogFromVizieR('I/355/gaiadr3', `${g.ra} ${g.dec}`, g.fov / 60, { onClick: 'showTable', color: '#6cb6ff' })); } catch (e) { /* Gaia layer optional */ }
       }
-    } catch (e) { $('#aladin').innerHTML = '<div style="padding:20px;color:var(--dim)">Sky map could not load (Aladin Lite blocked on this host).</div>'; }
+    } catch (e) { $('#aladin').innerHTML = '<div style="padding:20px;color:var(--dim)">Sky map could not load right now (the CDS sky survey servers did not answer).</div>'; }
   }
 
   /* ---------------- sharing ---------------- */

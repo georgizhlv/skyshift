@@ -38,6 +38,9 @@ const get = (url) => new Promise((res, rej) => https.get(url, { headers: { 'User
       } catch (e) { console.log(`retry ${k} (${e.message})`); await new Promise(r => setTimeout(r, 3000 * k)); }
     }
   }
+  // IRSA down? keep the previously bundled lists instead of publishing an empty cache
+  let old = []; try { old = JSON.parse(fs.readFileSync(path.join(OUT, 'index.json'), 'utf8')); } catch (e) { /* none yet */ }
+  for (const e of old) if (!index.some(x => x.id === e.id) && fs.existsSync(path.join(OUT, e.file))) { index.push(e); console.log(`${e.id}: kept previous list`); }
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
   console.log('done →', OUT);
 })();
