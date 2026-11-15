@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SkyShift – pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070a14;--card:#121a2e;--line:#243150;--fg:#eef1f7;--dim:#9aa4bb;--blue:#6cb6ff;--teal:#3fd0c9;--green:#9be15d;--orange:#ffb347;--red:#ff6b5e}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:Inter,system-ui,sans-serif;color:var(--fg)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.slide{position:absolute;inset:0;padding:110px 140px;background:radial-gradient(1100px 700px at 80% 20%,#15213f 0,var(--bg) 62%);opacity:0;visibility:hidden;transition:opacity .5s,visibility .5s;display:flex;flex-direction:column;gap:36px}
+.slide.on{opacity:1;visibility:visible}
+canvas.bg{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.slide>*:not(canvas):not(.foot){position:relative;z-index:1}
+h1{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:150px;line-height:.98;margin:0;letter-spacing:-3px}
+h2{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:78px;line-height:1.05;margin:0;letter-spacing:-1.5px}
+h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:40px;margin:0}
+p{margin:0;font-size:34px;line-height:1.4}
+.kicker{font-size:26px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--blue)}
+.lead{font-size:46px;line-height:1.3;max-width:1350px}
+.dim{color:var(--dim)}
+.grad{background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+.row{display:flex;gap:30px}
+.card{flex:1;background:rgba(18,26,46,.88);border:1px solid var(--line);border-radius:24px;padding:40px;display:flex;flex-direction:column;gap:14px}
+.card p{font-size:30px;color:var(--dim)}
+.num{font-family:'Space Grotesk',Inter,system-ui,sans-serif;font-size:120px;font-weight:700;line-height:1}
+.on .up{animation:up .7s cubic-bezier(.2,.7,.2,1) both}
+.on .up:nth-child(2){animation-delay:.12s}.on .up:nth-child(3){animation-delay:.24s}.on .up:nth-child(4){animation-delay:.36s}
+@keyframes up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.foot{position:absolute;left:140px;right:140px;bottom:50px;display:flex;justify-content:space-between;font-size:22px;color:var(--dim);z-index:2}
+/* game */
+.game{display:flex;gap:60px;align-items:center}
+#sky{width:900px;height:620px;border-radius:24px;border:2px solid var(--line);background:#02040a;flex:none;cursor:pointer}
+.tag{display:inline-block;font-size:24px;font-weight:700;letter-spacing:2px;padding:8px 16px;border-radius:999px;background:#1d2a48;color:var(--blue)}
+.reveal{opacity:0;transition:opacity .6s}
+.revealed .reveal{opacity:1}
+.btn{font:600 28px Inter,sans-serif;color:var(--bg);background:var(--orange);border:0;border-radius:14px;padding:16px 28px;cursor:pointer;align-self:flex-start}
+.steps{display:flex;gap:24px;align-items:stretch}
+.step{flex:1;background:rgba(18,26,46,.9);border:1px solid var(--line);border-radius:24px;padding:40px}
+.step b{display:block;font-family:'Space Grotesk',Inter,sans-serif;font-size:84px;line-height:1;margin-bottom:18px}
+.arrow{font-size:70px;color:var(--blue);align-self:center}
+table{width:100%;border-collapse:collapse;font-size:38px}
+td{padding:26px 0;border-bottom:1px solid var(--line)}
+td.v{font-family:'Space Grotesk',Inter,sans-serif;font-weight:700;font-size:56px;text-align:right;padding-right:40px}
+td.c{color:var(--dim);text-align:right;width:380px;font-size:32px}
+.ok{color:var(--green)}
+.qr{width:300px;height:300px;border-radius:18px;padding:14px;background:#eef1f7}
+#prog{position:fixed;left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--blue),var(--red));transition:width .4s;z-index:9}
+#timer{position:fixed;right:18px;top:14px;font:600 22px Inter;color:var(--dim);z-index:9;display:none}
+#help{position:fixed;left:18px;top:14px;font:15px Inter;color:#556;z-index:9}
+</style></head><body>
+<div id="stage">
+
+<!-- 1 · 10-second hook -->
+<section class="slide" id="s1">
+<canvas class="bg" id="bg1"></canvas>
+<p class="kicker up">NASA Space Apps 2026 · Planet X and SPHEREx</p>
+<h1 class="up">Sky<span class="grad">Shift</span></h1>
+<p class="lead up">In 48 hours we built a website that turns <b>NASA SPHEREx</b> infrared images into a movie of the sky, so <b>anyone</b> can catch brown dwarfs, comets and nearby stars moving.</p>
+<div class="foot"><span>Team Che</span><span>github.com/georgizhlv/skyshift</span></div>
+</section>
+
+<!-- 2 · question to the jury -->
+<section class="slide" id="s2">
+<p class="kicker">A quick test for the jury</p>
+<div class="game">
+<canvas id="sky" width="900" height="620" aria-label="Blinking sky: one star moves between two images"></canvas>
+<div style="display:flex;flex-direction:column;gap:30px">
+<h2>One of these stars is moving.<br><span class="grad">Can you find it?</span></h2>
+<p class="dim">Two images of the same patch of sky, six months apart, blinking.</p>
+<button class="btn" id="revealBtn">Reveal (R)</button>
+<p class="reveal">That is exactly how <b>Pluto</b> was found in 1930, and how volunteers found <b>most known brown dwarfs</b>.</p>
+</div></div>
+<div class="foot"><span>Simulated sky for this game</span><span>2 / 7</span></div>
+</section>
+
+<!-- 3 · problem -->
+<section class="slide" id="s3">
+<p class="kicker">The problem</p>
+<h2>SPHEREx is mapping the whole sky.<br>No human can sift it by hand.</h2>
+<div class="row">
+<div class="card up"><div class="num" style="color:var(--blue)">102</div><p>colours of infrared light</p></div>
+<div class="card up"><div class="num" style="color:var(--orange)">6 mo</div><p>for a new map of the entire sky</p></div>
+<div class="card up"><div class="num" style="color:var(--red)">1 B+</div><p>objects, some of them moving</p></div>
+</div>
+<p class="lead dim">And to see anything, you need 66 MB files and astronomy software.</p>
+<div class="foot"><span>SkyShift</span><span>3 / 7</span></div>
+</section>
+
+<!-- 4 · solution -->
+<section class="slide" id="s4">
+<p class="kicker">Our solution</p>
+<h2>Any spot on the sky. Three seconds of effort.</h2>
+<div class="steps">
+<div class="step up"><b style="color:var(--blue)">1</b><h3>Type</h3><p class="dim">a star name or coordinates</p></div>
+<div class="arrow">→</div>
+<div class="step up"><b style="color:var(--green)">2</b><h3>Watch it blink</h3><p class="dim">every SPHEREx image of that spot, stacked into a movie</p></div>
+<div class="arrow">→</div>
+<div class="step up"><b style="color:var(--red)">3</b><h3>Measure</h3><p class="dim">motion, brightness and a full infrared spectrum, live</p></div>
+</div>
+<p class="lead">Free. In the browser. No account, no install.</p>
+<div class="foot"><span>SkyShift</span><span>4 / 7</span></div>
+</section>
+
+<!-- 5 · what's clever -->
+<section class="slide" id="s5">
+<p class="kicker">What makes it special</p>
+<h2>Smart enough for scientists, simple enough for kids</h2>
+<div class="row">
+<div class="card up"><div class="num" style="color:var(--orange)">0.4<span style="font-size:60px"> MB</span></div><p>We read only the pixels we need, not the 66 MB file. 160× less data.</p></div>
+<div class="card up"><div class="num" style="color:var(--teal)">0.75–5<span style="font-size:60px"> µm</span></div><p>A spectrum rebuilt on the fly: water, methane, CO₂ show up.</p></div>
+<div class="card up"><div class="num" style="color:var(--red)">Auto</div><p>Mover Scan tracks every star in the field and flags what moves.</p></div>
+</div>
+<div class="foot"><span>SkyShift</span><span>5 / 7</span></div>
+</section>
+
+<!-- 6 · proof -->
+<section class="slide" id="s6">
+<p class="kicker">Does it work? Tested on real SPHEREx data</p>
+<table>
+<tr><td>Barnard's Star</td><td class="v"><span class="count" data-to="10.25">10.25</span>″/yr</td><td class="c">catalogue 10.39 <span class="ok">✓</span></td></tr>
+<tr><td>WISE 0855, coldest brown dwarf</td><td class="v"><span class="count" data-to="7.85">7.85</span>″/yr</td><td class="c">catalogue 8.15 <span class="ok">✓</span></td></tr>
+<tr><td>ε Indi B, brown dwarf pair</td><td class="v"><span class="count" data-to="4.45">4.45</span>″/yr</td><td class="c">found automatically <span class="ok">✓</span></td></tr>
+<tr><td>R Draconis, pulsating star</td><td class="v"><span class="count" data-to="59" data-dec="0">59</span>%</td><td class="c">brighter, then dimmer <span class="ok">✓</span></td></tr>
+</table>
+<p class="dim">A SPHEREx pixel is 6″. We measure motions smaller than 2 pixels a year.</p>
+<div class="foot"><span>SkyShift</span><span>6 / 7</span></div>
+</section>
+
+<!-- 7 · close -->
+<section class="slide" id="s7">
+<canvas class="bg" id="bg7"></canvas>
+<p class="kicker">Try it now</p>
+<div style="display:flex;gap:80px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:34px;flex:1">
+<h2>The next nearby brown dwarf could be found by <span class="grad">anyone with a browser</span>.</h2>
+<p class="lead dim">Scan the code and find your own moving object.</p>
+<p style="font-size:24px" class="dim">Data: NASA SPHEREx via NASA/IPAC IRSA &amp; AWS · Gaia DR3 (ESA) · CDS. Code developed with the help of an AI assistant (Claude, Anthropic).</p>
+</div>
+<svg viewBox="0 0 31 31" class="qr" role="img" aria-label="QR code to the SkyShift website"><rect width="100%" height="100%" fill="#eef1f7"/><path d="M1,1H2V2H1zM2,1H3V2H2zM3,1H4V2H3zM4,1H5V2H4zM5,1H6V2H5zM6,1H7V2H6zM7,1H8V2H7zM9,1H10V2H9zM10,1H11V2H10zM11,1H12V2H11zM12,1H13V2H12zM13,1H14V2H13zM15,1H16V2H15zM17,1H18V2H17zM18,1H19V2H18zM19,1H20V2H19zM20,1H21V2H20zM21,1H22V2H21zM23,1H24V2H23zM24,1H25V2H24zM25,1H26V2H25zM26,1H27V2H26zM27,1H28V2H27zM28,1H29V2H28zM29,1H30V2H29zM1,2H2V3H1zM7,2H8V3H7zM9,2H10V3H9zM10,2H11V3H10zM11,2H12V3H11zM13,2H14V3H13zM18,2H19V3H18zM21,2H22V3H21zM23,2H24V3H23zM29,2H30V3H29zM1,3H2V4H1zM3,3H4V4H3zM4,3H5V4H4zM5,3H6V4H5zM7,3H8V4H7zM11,3H12V4H11zM12,3H13V4H12zM14,3H15V4H14zM16,3H17V4H16zM20,3H21V4H20zM21,3H22V4H21zM23,3H24V4H23zM25,3H26V4H25zM26,3H27V4H26zM27,3H28V4H27zM29,3H30V4H29zM1,4H2V5H1zM3,4H4V5H3zM4,4H5V5H4zM5,4H6V5H5zM7,4H8V5H7zM9,4H10V5H9zM10,4H11V5H10zM11,4H12V5H11zM12,4H13V5H12zM14,4H15V5H14zM16,4H17V5H16zM18,4H19V5H18zM21,4H22V5H21zM23,4H24V5H23zM25,4H26V5H25zM26,4H27V5H26zM27,4H28V5H27zM29,4H30V5H29zM1,5H2V6H1zM3,5H4V6H3zM4,5H5V6H4zM5,5H6V6H5zM7,5H8V6H7zM12,5H13V6H12zM14,5H15V6H14zM15,5H16V6H15zM16,5H17V6H16zM17,5H18V6H17zM18,5H19V6H18zM19,5H20V6H19zM20,5H21V6H20zM23,5H24V6H23zM25,5H26V6H25zM26,5H27V6H26zM27,5H28V6H27zM29,5H30V6H29zM1,6H2V7H1zM7,6H8V7H7zM11,6H12V7H11zM15,6H16V7H15zM19,6H20V7H19zM20,6H21V7H20zM21,6H22V7H21zM23,6H24V7H23zM29,6H30V7H29zM1,7H2V8H1zM2,7H3V8H2zM3,7H4V8H3zM4,7H5V8H4zM5,7H6V8H5zM6,7H7V8H6zM7,7H8V8H7zM9,7H10V8H9zM11,7H12V8H11zM13,7H14V8H13zM15,7H16V8H15zM17,7H18V8H17zM19,7H20V8H19zM21,7H22V8H21zM23,7H24V8H23zM24,7H25V8H24zM25,7H26V8H25zM26,7H27V8H26zM27,7H28V8H27zM28,7H29V8H28zM29,7H30V8H29zM9,8H10V9H9zM18,8H19V9H18zM19,8H20V9H19zM21,8H22V9H21zM1,9H2V10H1zM3,9H4V10H3zM4,9H5V10H4zM6,9H7V10H6zM7,9H8V10H7zM8,9H9V10H8zM10,9H11V10H10zM12,9H13V10H12zM13,9H14V10H13zM14,9H15V10H14zM16,9H17V10H16zM17,9H18V10H17zM18,9H19V10H18zM19,9H20V10H19zM23,9H24V10H23zM26,9H27V10H26zM28,9H29V10H28zM29,9H30V10H29zM1,10H2V11H1zM2,10H3V11H2zM4,10H5V11H4zM5,10H6V11H5zM8,10H9V11H8zM9,10H10V11H9zM10,10H11V11H10zM12,10H13V11H12zM14,10H15V11H14zM17,10H18V11H17zM19,10H20V11H19zM20,10H21V11H20zM21,10H22V11H21zM22,10H23V11H22zM23,10H24V11H23zM24,10H25V11H24zM25,10H26V11H25zM29,10H30V11H29zM1,11H2V12H1zM2,11H3V12H2zM5,11H6V12H5zM7,11H8V12H7zM11,11H12V12H11zM12,11H13V12H12zM14,11H15V12H14zM22,11H23V12H22zM24,11H25V12H24zM25,11H26V12H25zM27,11H28V12H27zM28,11H29V12H28zM3,12H4V13H3zM6,12H7V13H6zM9,12H10V13H9zM10,12H11V13H10zM13,12H14V13H13zM17,12H18V13H17zM21,12H22V13H21zM22,12H23V13H22zM29,12H30V13H29zM2,13H3V14H2zM3,13H4V14H3zM4,13H5V14H4zM5,13H6V14H5zM7,13H8V14H7zM8,13H9V14H8zM10,13H11V14H10zM11,13H12V14H11zM12,13H13V14H12zM15,13H16V14H15zM18,13H19V14H18zM19,13H20V14H19zM24,13H25V14H24zM26,13H27V14H26zM27,13H28V14H27zM1,14H2V15H1zM3,14H4V15H3zM4,14H5V15H4zM12,14H13V15H12zM15,14H16V15H15zM16,14H17V15H16zM17,14H18V15H17zM20,14H21V15H20zM23,14H24V15H23zM27,14H28V15H27zM28,14H29V15H28zM29,14H30V15H29zM4,15H5V16H4zM5,15H6V16H5zM6,15H7V16H6zM7,15H8V16H7zM10,15H11V16H10zM11,15H12V16H11zM13,15H14V16H13zM14,15H15V16H14zM18,15H19V16H18zM19,15H20V16H19zM20,15H21V16H20zM24,15H25V16H24zM25,15H26V16H25zM27,15H28V16H27zM28,15H29V16H28zM29,15H30V16H29zM1,16H2V17H1zM2,16H3V17H2zM3,16H4V17H3zM4,16H5V17H4zM6,16H7V17H6zM9,16H10V17H9zM12,16H13V17H12zM13,16H14V17H13zM15,16H16V17H15zM19,16H20V17H19zM20,16H21V17H20zM21,16H22V17H21zM24,16H25V17H24zM28,16H29V17H28zM1,17H2V18H1zM5,17H6V18H5zM6,17H7V18H6zM7,17H8V18H7zM9,17H10V18H9zM10,17H11V18H10zM12,17H13V18H12zM15,17H16V18H15zM17,17H18V18H17zM19,17H20V18H19zM20,17H21V18H20zM21,17H22V18H21zM22,17H23V18H22zM24,17H25V18H24zM25,17H26V18H25zM26,17H27V18H26zM28,17H29V18H28zM2,18H3V19H2zM3,18H4V19H3zM5,18H6V19H5zM6,18H7V19H6zM9,18H10V19H9zM10,18H11V19H10zM15,18H16V19H15zM16,18H17V19H16zM18,18H19V19H18zM22,18H23V19H22zM24,18H25V19H24zM26,18H27V19H26zM27,18H28V19H27zM28,18H29V19H28zM1,19H2V20H1zM3,19H4V20H3zM5,19H6V20H5zM6,19H7V20H6zM7,19H8V20H7zM9,19H10V20H9zM10,19H11V20H10zM12,19H13V20H12zM13,19H14V20H13zM14,19H15V20H14zM15,19H16V20H15zM16,19H17V20H16zM17,19H18V20H17zM19,19H20V20H19zM22,19H23V20H22zM23,19H24V20H23zM24,19H25V20H24zM25,19H26V20H25zM27,19H28V20H27zM6,20H7V21H6zM9,20H10V21H9zM10,20H11V21H10zM14,20H15V21H14zM15,20H16V21H15zM18,20H19V21H18zM19,20H20V21H19zM20,20H21V21H20zM23,20H24V21H23zM27,20H28V21H27zM2,21H3V22H2zM4,21H5V22H4zM5,21H6V22H5zM6,21H7V22H6zM7,21H8V22H7zM8,21H9V22H8zM9,21H10V22H9zM11,21H12V22H11zM12,21H13V22H12zM13,21H14V22H13zM14,21H15V22H14zM15,21H16V22H15zM16,21H17V22H16zM18,21H19V22H18zM19,21H20V22H19zM20,21H21V22H20zM21,21H22V22H21zM22,21H23V22H22zM23,21H24V22H23zM24,21H25V22H24zM25,21H26V22H25zM26,21H27V22H26zM27,21H28V22H27zM9,22H10V23H9zM10,22H11V23H10zM12,22H13V23H12zM17,22H18V23H17zM18,22H19V23H18zM19,22H20V23H19zM20,22H21V23H20zM21,22H22V23H21zM25,22H26V23H25zM26,22H27V23H26zM27,22H28V23H27zM28,22H29V23H28zM29,22H30V23H29zM1,23H2V24H1zM2,23H3V24H2zM3,23H4V24H3zM4,23H5V24H4zM5,23H6V24H5zM6,23H7V24H6zM7,23H8V24H7zM9,23H10V24H9zM11,23H12V24H11zM15,23H16V24H15zM17,23H18V24H17zM19,23H20V24H19zM20,23H21V24H20zM21,23H22V24H21zM23,23H24V24H23zM25,23H26V24H25zM26,23H27V24H26zM28,23H29V24H28zM1,24H2V25H1zM7,24H8V25H7zM9,24H10V25H9zM11,24H12V25H11zM12,24H13V25H12zM13,24H14V25H13zM14,24H15V25H14zM15,24H16V25H15zM16,24H17V25H16zM17,24H18V25H17zM19,24H20V25H19zM21,24H22V25H21zM25,24H26V25H25zM26,24H27V25H26zM1,25H2V26H1zM3,25H4V26H3zM4,25H5V26H4zM5,25H6V26H5zM7,25H8V26H7zM11,25H12V26H11zM12,25H13V26H12zM18,25H19V26H18zM19,25H20V26H19zM21,25H22V26H21zM22,25H23V26H22zM23,25H24V26H23zM24,25H25V26H24zM25,25H26V26H25zM27,25H28V26H27zM1,26H2V27H1zM3,26H4V27H3zM4,26H5V27H4zM5,26H6V27H5zM7,26H8V27H7zM9,26H10V27H9zM10,26H11V27H10zM13,26H14V27H13zM14,26H15V27H14zM16,26H17V27H16zM17,26H18V27H17zM21,26H22V27H21zM22,26H23V27H22zM24,26H25V27H24zM25,26H26V27H25zM26,26H27V27H26zM29,26H30V27H29zM1,27H2V28H1zM3,27H4V28H3zM4,27H5V28H4zM5,27H6V28H5zM7,27H8V28H7zM9,27H10V28H9zM10,27H11V28H10zM11,27H12V28H11zM12,27H13V28H12zM14,27H15V28H14zM18,27H19V28H18zM19,27H20V28H19zM21,27H22V28H21zM24,27H25V28H24zM27,27H28V28H27zM29,27H30V28H29zM1,28H2V29H1zM7,28H8V29H7zM10,28H11V29H10zM12,28H13V29H12zM13,28H14V29H13zM14,28H15V29H14zM15,28H16V29H15zM21,28H22V29H21zM22,28H23V29H22zM23,28H24V29H23zM24,28H25V29H24zM26,28H27V29H26zM28,28H29V29H28zM1,29H2V30H1zM2,29H3V30H2zM3,29H4V30H3zM4,29H5V30H4zM5,29H6V30H5zM6,29H7V30H6zM7,29H8V30H7zM9,29H10V30H9zM11,29H12V30H11zM12,29H13V30H12zM14,29H15V30H14zM17,29H18V30H17zM19,29H20V30H19zM20,29H21V30H20zM21,29H22V30H21zM28,29H29V30H28z" fill="#090c16"/></svg>
+</div>
+<div class="foot"><span>Team Che</span><span>georgizhlv.github.io/skyshift</span></div>
+</section>
+</div>
+<div id="prog"></div><div id="timer">3:00</div><div id="help">← → navigate · R reveal · F fullscreen · T timer</div>
+<script>
+(function(){
+const S=[...document.querySelectorAll('.slide')];let i=0;
+const stage=document.getElementById('stage');
+function fit(){const k=Math.min(innerWidth/1920,innerHeight/1080);stage.style.left='0';stage.style.top='0';stage.style.transformOrigin='0 0';stage.style.transform=`translate(${(innerWidth-1920*k)/2}px,${(innerHeight-1080*k)/2}px) scale(${k})`}
+addEventListener('resize',fit);fit();
+function go(n){i=Math.max(0,Math.min(S.length-1,n));S.forEach((s,k)=>s.classList.toggle('on',k===i));document.getElementById('prog').style.width=((i+1)/S.length*100)+'%';
+ try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+ if(S[i].id==='s6')count();if(S[i].id==='s2')S[i].classList.remove('revealed');}
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(i+1)}if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(i-1)}
+ if(e.key==='r'||e.key==='R')reveal();if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
+ if(e.key==='t'||e.key==='T')timer();if(e.key==='Home')go(0);if(e.key==='End')go(S.length-1)});
+addEventListener('click',e=>{if(e.target.closest('button,a,#sky'))return;go(e.clientX>innerWidth*0.3?i+1:i-1)});
+document.getElementById('help').onclick=e=>e.stopPropagation();
+// seeded random
+function rng(s){return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+// background starfields with a moving trail
+function bg(id,seed){const c=document.getElementById(id);if(!c)return;c.width=1920;c.height=1080;const x=c.getContext('2d'),r=rng(seed);const st=[...Array(260)].map(()=>[r()*1920,r()*1080,r()*1.8+.3,r()]);let t=0;
+ const cols=['#6cb6ff','#3fd0c9','#9be15d','#ffb347','#ff6b5e'];
+ (function f(){x.clearRect(0,0,1920,1080);st.forEach(s=>{x.globalAlpha=.35+.5*Math.abs(Math.sin(t/60+s[3]*9));x.fillStyle='#dfe6ff';x.beginPath();x.arc(s[0],s[1],s[2],0,7);x.fill()});
+  x.globalAlpha=1;const k=(t/90)%5;for(let j=0;j<5;j++){if(j>k)break;x.fillStyle=cols[j];x.globalAlpha=j<Math.floor(k)?.55:.95;x.beginPath();x.arc(1180+j*110,760-j*70,j===Math.floor(k)?14:10,0,7);x.fill()}
+  t++;requestAnimationFrame(f)})()}
+bg('bg1',7);bg('bg7',11);
+// game
+const sky=document.getElementById('sky'),g=sky.getContext('2d'),R=rng(42);
+const stars=[...Array(140)].map(()=>({x:20+R()*860,y:20+R()*580,r:R()<.12?3.4:R()*1.8+.7,b:.5+R()*.5}));
+const mv={x:612,y:236,dx:16,dy:-9,r:2.6};let frame=0;
+function drawSky(){g.fillStyle='#02040a';g.fillRect(0,0,900,620);stars.forEach(s=>{g.globalAlpha=s.b;g.fillStyle='#e9eeff';g.beginPath();g.arc(s.x,s.y,s.r,0,7);g.fill()});
+ g.globalAlpha=1;g.fillStyle='#e9eeff';const px=mv.x+(frame?mv.dx:0),py=mv.y+(frame?mv.dy:0);g.beginPath();g.arc(px,py,mv.r,0,7);g.fill();
+ g.fillStyle='#9aa4bb';g.font='600 22px Inter';g.fillText(frame?'Image B · six months later':'Image A',22,598);
+ if(document.getElementById('s2').classList.contains('revealed')){g.strokeStyle='#ffb347';g.lineWidth=3;g.beginPath();g.arc(mv.x+mv.dx/2,mv.y+mv.dy/2,34,0,7);g.stroke();g.beginPath();g.moveTo(mv.x,mv.y);g.lineTo(mv.x+mv.dx,mv.y+mv.dy);g.stroke()}}
+setInterval(()=>{frame^=1;drawSky()},550);drawSky();
+function reveal(){if(S[i].id!=='s2')return;S[i].classList.add('revealed');drawSky()}
+document.getElementById('revealBtn').onclick=e=>{e.stopPropagation();reveal()};
+sky.onclick=e=>{e.stopPropagation();const b=sky.getBoundingClientRect(),k=900/b.width,cx=(e.clientX-b.left)*k,cy=(e.clientY-b.top)*k;if(Math.hypot(cx-mv.x-mv.dx/2,cy-mv.y-mv.dy/2)<40)reveal()};
+// count-up
+function count(){document.querySelectorAll('#s6 .count').forEach((el,n)=>{const to=+el.dataset.to,dec=el.dataset.dec==null?2:+el.dataset.dec,t0=performance.now()+n*180;
+ (function f(now){const p=Math.min(1,Math.max(0,(now-t0)/1100)),e=1-Math.pow(1-p,3);el.textContent=(to*e).toFixed(dec);if(p<1)requestAnimationFrame(f)})(t0)})}
+// 3-minute timer
+let tid=null;function timer(){const el=document.getElementById('timer');if(tid){clearInterval(tid);tid=null;el.style.display='none';return}let s=180;el.style.display='block';el.style.color='';el.textContent='3:00';tid=setInterval(()=>{s--;el.textContent=(s<0?'-':'')+Math.floor(Math.abs(s)/60)+':'+String(Math.abs(s)%60).padStart(2,'0');if(s<=30)el.style.color='#ff6b5e'},1000)}
+go((parseInt(location.hash.slice(1))||1)-1);
+})();
+</script></body></html>
