@@ -39,6 +39,21 @@
 
   const frameADQL = (ra, dec) => `SELECT a.uri, p.time_bounds_lower, p.energy_bandpassname FROM spherex.artifact a JOIN spherex.plane p ON a.planeid = p.planeid WHERE 1 = CONTAINS(POINT('ICRS', ${ra.toFixed(6)}, ${dec.toFixed(6)}), p.poly) ORDER BY p.time_bounds_lower`;
 
+  /** IRSA SIA through the proxy: a second, independent route to the full SPHEREx archive */
+  async function sia(ra, dec) {
+    if (!C.PROXY) throw new Error('NO_PROXY');
+    const r = await SS.fetchRetry(`${C.PROXY.replace(/\/$/, '')}/frames?ra=${ra.toFixed(6)}&dec=${dec.toFixed(6)}`, {}, 3, 90000);
+    return r.text();
+  }
+  /** whichever IRSA service answers first wins (TAP is often overloaded; SIA usually answers in seconds) */
+  async function liveRows(ra, dec) {
+    const ask = (via, p) => p.then((txt) => { if (!/^\s*uri,/.test(txt)) throw new Error(via + ': unexpected answer'); return { rows: parseCSV(txt), via }; });
+    const routes = [ask('TAP', tap(frameADQL(ra, dec)))];
+    if (C.PROXY) routes.push(ask('SIA', sia(ra, dec)));
+    try { return await Promise.any(routes); }
+    catch (e) { throw (e.errors && e.errors.find(x => x.message === 'NO_PROXY')) || (e.errors ? e.errors[0] : e); }
+  }
+
   let staticIndex = null;
   async function staticCache(ra, dec) {
     try {
@@ -62,13 +77,12 @@
         if (s && !SS.tapAvailable()) return { frames: toFrames(s.rows), source: 'bundled cache · ' + (s.when || '') };
         if (s && !force) { this._bg(ra, dec, ck); return { frames: toFrames(s.rows), source: 'bundled cache (refreshing in background)' }; }
       }
-      onStatus && onStatus('Asking IRSA which SPHEREx exposures cover this spot… (IRSA can be slow during the hackathon)');
-      const txt = await tap(frameADQL(ra, dec));
-      const rows = parseCSV(txt);
+      onStatus && onStatus('Asking IRSA which SPHEREx exposures cover this spot (two services in parallel: TAP and SIA)…');
+      const { rows, via } = await liveRows(ra, dec);
       SS.cache.set(ck, { t: Date.now(), rows });
-      return { frames: toFrames(rows), source: 'live IRSA TAP · ' + new Date().toLocaleString() };
+      return { frames: toFrames(rows), source: `live IRSA ${via} · ` + new Date().toLocaleString() };
     },
-    async _bg(ra, dec, ck) { try { const rows = parseCSV(await tap(frameADQL(ra, dec))); SS.cache.set(ck, { t: Date.now(), rows }); } catch (e) { /* ignore */ } },
+    async _bg(ra, dec, ck) { try { const { rows } = await liveRows(ra, dec); SS.cache.set(ck, { t: Date.now(), rows }); } catch (e) { /* ignore */ } },
     seed(ra, dec, csv) { return SS.cache.set(`tap:${ra.toFixed(3)}:${dec.toFixed(3)}`, { t: Date.now(), rows: parseCSV(csv) }); },
     parseCSV, toFrames, frameADQL,
 
@@ -77,7 +91,12 @@
       const ck = `gaia:${ra.toFixed(3)}:${dec.toFixed(3)}:${radiusDeg.toFixed(3)}`;
       const c = await SS.cache.get(ck); if (c) return c;
       const q = `SELECT ra,dec,pmra,pmdec,parallax,phot_g_mean_mag,bp_rp FROM gaia_dr3_source WHERE 1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${ra.toFixed(6)},${dec.toFixed(6)},${radiusDeg.toFixed(4)})) AND phot_g_mean_mag < ${gmax}`;
-      const rows = parseCSV(await tap(q, 120000)).map(r => ({ ra: +r.ra, dec: +r.dec, pmra: +r.pmra || 0, pmdec: +r.pmdec || 0, plx: +r.parallax || 0, g: +r.phot_g_mean_mag, bprp: +r.bp_rp }));
+      const routes = [tap(q, 120000)];
+      if (C.PROXY && radiusDeg <= 0.2) // IRSA Cone Search: independent of the (often overloaded) TAP service
+        routes.push(SS.fetchRetry(`${C.PROXY.replace(/\/$/, '')}/gaia?ra=${ra.toFixed(6)}&dec=${dec.toFixed(6)}&r=${radiusDeg.toFixed(4)}&gmax=${gmax}`, {}, 2, 120000).then(r => r.text()));
+      const txt = await Promise.any(routes.map(p => p.then(t => { if (!/^\s*ra,dec,/.test(t)) throw new Error('unexpected Gaia answer'); return t; })))
+        .catch(e => { throw e.errors ? e.errors[0] : e; });
+      const rows = parseCSV(txt).map(r => ({ ra: +r.ra, dec: +r.dec, pmra: +r.pmra || 0, pmdec: +r.pmdec || 0, plx: +r.parallax || 0, g: +r.phot_g_mean_mag, bprp: +r.bp_rp }));
       SS.cache.set(ck, rows);
       return rows;
     },

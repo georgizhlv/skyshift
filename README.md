@@ -25,6 +25,7 @@ their 0.75–5 µm infrared spectrum looks like**.
 | **Gaia + sky map** | Gaia DR3 stars propagated to each epoch; Aladin Lite context map (AllWISE / 2MASS / DSS / Pan-STARRS) | “overlay data from Gaia or WISE”, “Aladin” |
 | **Field of view** | 2′ to 30′, with a live data-volume estimate | “let users choose the field of view” |
 | **URLs & embeds** | `?target=wise0855`, `?ra=133.76&dec=-7.24&fov=6&dets=56&mode=diff`, `&embed=1` | “query your tool by including coordinates in the URL” |
+| **Works when IRSA is busy** | Exposure lists come from two independent IRSA services (TAP and SIA) at once; whichever answers first wins, so any position on the sky works even when TAP is overloaded | “help as many people as possible” |
 | **Always up to date** | Every query asks the archive for *all* releases (DR1, QR3, future ones); newest processing wins | “easy to update with the latest data releases” |
 
 ## Validation on the challenge targets (measured by SkyShift, Nov 2026)
@@ -44,7 +45,8 @@ with sub-pixel precision.
 
 ```
  Browser (all the science runs here)
- ├─ 1. "Which exposures cover this spot?"  ──► SkyShift proxy (Cloudflare Worker, 24 h cache) ──► IRSA TAP (spherex.plane/artifact)
+ ├─ 1. "Which exposures cover this spot?"  ──► SkyShift proxy (Cloudflare Worker, 24 h cache) ─┬► IRSA TAP (spherex.plane/artifact)
+ │                                                                           └► IRSA SIA (all spherex_* releases) — asked in parallel, first answer wins
  ├─ 2. FITS header (≈26 kB)               ──► AWS S3 nasa-irsa-spherex (public, CORS, HTTP Range)
  ├─ 3. Only the pixel rows we need (≈0.4 MB instead of a 66 MB file or a 4 MB IRSA cutout)
  ├─ 4. TAN-SIP WCS (verified against astropy to 1e-9 px) → resample to a north-up grid
@@ -61,6 +63,8 @@ Everything is cached in the browser (IndexedDB), so a second visit is instant. N
 ```
 node proxy/server.js        # → http://localhost:8080  (serves the app and the proxy)
 ```
+Every archive answer is also saved to `proxy/.cache/`, so any target opened once keeps working after a restart,
+even if IRSA is down. Before a demo, open each target you plan to show once.
 
 **Public deployment (free, ~10 minutes):**
 1. Cloudflare → Workers → create a worker → paste `proxy/worker.js` → Deploy. Copy its URL.
